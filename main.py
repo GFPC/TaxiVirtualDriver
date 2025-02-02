@@ -54,8 +54,19 @@ def OrderLifeCycle(drive, driver):
                 exit(1)
     else:
         data = make_request(url_prefix + "drive/get/" + str(order_id), data=data)
-    print("API->Accept:",order_id)
+    print("API->Accept:",order_id, 'status:', data['status'])
+
+
+    start_datetime = int(datetime.datetime.utcfromtimestamp(
+        datetime.datetime.strptime(drive["b_start_datetime"], "%Y-%m-%d %H:%M:%S%z").timestamp()).timestamp())
+    current_time = int(datetime.datetime.utcnow().timestamp())
+
     time.sleep(WAIT_AFTER_ACCEPT_STATE)
+
+    if start_datetime > current_time:
+        print("HYBERNATE->Order:",order_id, "for", start_datetime - current_time, "seconds")
+        time.sleep(start_datetime - current_time)
+
     #2 arrive
     data = {
         "token": GetAdminHashAndToken()[0],
@@ -64,7 +75,7 @@ def OrderLifeCycle(drive, driver):
         "action":"set_arrival_state",
     }
     data = make_request(url_prefix + "drive/get/"+str(order_id), data=data)
-    print("API->Arrive:",order_id)
+    print("API->Arrive:",order_id, 'status:', data)
     time.sleep(WAIT_AFTER_ARRIVE_STATE)
     #3 start
     data = {
@@ -74,7 +85,7 @@ def OrderLifeCycle(drive, driver):
         "action":"set_start_state",
     }
     data = make_request(url_prefix + "drive/get/"+str(order_id), data=data)
-    print("API->Start:",order_id)
+    print("API->Start:",order_id, 'status:', data['status'])
     time.sleep(WAIT_AFTER_START_STATE)
     #4 end
     data = {
@@ -84,7 +95,7 @@ def OrderLifeCycle(drive, driver):
         "action":"set_complete_state",
     }
     data = make_request(url_prefix + "drive/get/"+str(order_id), data=data)
-    print("API->End:",order_id)
+    print("API->End:",order_id, 'status:', data['status'])
     pass
 
 async def loop(driver, multiuser):
@@ -93,7 +104,7 @@ async def loop(driver, multiuser):
     for i in drives_list["data"]["booking"]:
         drive = drives_list["data"]["booking"][i]
 
-        start_datetime = drive["b_start_datetime"]
+        created_datetime = drive["b_created"]
         max_waiting = drive["b_max_waiting"]
         user_id = drive["u_id"]
 
@@ -104,13 +115,13 @@ async def loop(driver, multiuser):
         user = user["data"]["user"][str(user_id)]
 
 
-        start_datetime = int(datetime.datetime.utcfromtimestamp(datetime.datetime.strptime(start_datetime, "%Y-%m-%d %H:%M:%S%z").timestamp()).timestamp())
+        created_datetime = int(datetime.datetime.utcfromtimestamp(datetime.datetime.strptime(created_datetime, "%Y-%m-%d %H:%M:%S%z").timestamp()).timestamp())
 
         current_time = int(datetime.datetime.utcnow().timestamp())
 
-        print(str(drive["b_id"]) + "\t" + drive["b_start_datetime"] + "\t" + str(current_time - start_datetime) + "\t" + str(current_time - (start_datetime + TAKE_AFTER_SECONDS)) + "\t" + str(user["referrer_u_id"].lower() + "|" + multiuser["u_id"].lower()))
-        if current_time - (start_datetime + TAKE_AFTER_SECONDS) > 0 and str(user["referrer_u_id"]).lower() == str(multiuser["u_id"]).lower() and str(drive["b_state"]) == "1":
-            print("Founded suitable drive| id: " + str(drive["b_id"]), "|User id: " + str(user_id), "|Start datetime: " + str(start_datetime), "|Max waiting: " + str(max_waiting) + "|IsVoting: " + str(drive.get("b_voting",False)))
+        print(str(drive["b_id"]) + "\t" + drive["b_start_datetime"] + "\t" + str(current_time - created_datetime) + "\t" + str(current_time - (created_datetime + TAKE_AFTER_SECONDS)) + "\t" + str(user["referrer_u_id"].lower() + "|" + multiuser["u_id"].lower()))
+        if current_time - (created_datetime + TAKE_AFTER_SECONDS) > 0 and str(user["referrer_u_id"]).lower() == str(multiuser["u_id"]).lower() and str(drive["b_state"]) == "1":
+            print("Founded suitable drive| id: " + str(drive["b_id"]), "|User id: " + str(user_id), "|Start datetime: " + str(created_datetime), "|Max waiting: " + str(max_waiting) + "|IsVoting: " + str(drive.get("b_voting",False)))
             t = Thread(target=OrderLifeCycle, args=(drive,driver), daemon=True)
             t.start()
     print("Done!------------------------------------")
