@@ -198,4 +198,5 @@ async def main():
         await asyncio.sleep(LOOP_PERIOD_SECONDS)
 
 if __name__ == "__main__":
+    print("Starting...")
     asyncio.run(main())
