@@ -119,7 +119,7 @@ async def loop(driver, multiuser):
 
         current_time = int(datetime.datetime.utcnow().timestamp())
 
-        print(str(drive["b_id"]) + "\t" + drive["b_start_datetime"] + "\t" + str(current_time - created_datetime) + "\t" + str(current_time - (created_datetime + TAKE_AFTER_SECONDS)) + "\t" + str(user["referrer_u_id"].lower() + "|" + multiuser["u_id"].lower()))
+        print(str(drive["b_id"]) + "\t" + drive["b_start_datetime"] + "\t" + str(current_time - created_datetime) + "\t" + str(current_time - (created_datetime + TAKE_AFTER_SECONDS)) + "\t" + str(str(user["referrer_u_id"]).lower() + "|" + str(multiuser["u_id"]).lower()))
         if current_time - (created_datetime + TAKE_AFTER_SECONDS) > 0 and str(user["referrer_u_id"]).lower() == str(multiuser["u_id"]).lower() and str(drive["b_state"]) == "1":
             print("Founded suitable drive| id: " + str(drive["b_id"]), "|User id: " + str(user_id), "|Start datetime: " + str(created_datetime), "|Max waiting: " + str(max_waiting) + "|IsVoting: " + str(drive.get("b_voting",False)))
             t = Thread(target=OrderLifeCycle, args=(drive,driver), daemon=True)
