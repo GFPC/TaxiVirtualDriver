@@ -59,7 +59,7 @@ def OrderLifeCycle(drive, driver):
 
     start_datetime = int(datetime.datetime.utcfromtimestamp(
         datetime.datetime.strptime(drive["b_start_datetime"], "%Y-%m-%d %H:%M:%S%z").timestamp()).timestamp())
-    current_time = int(datetime.datetime.utcnow().timestamp())
+    current_time = int(datetime.datetime.now(datetime.UTC).timestamp())
 
     time.sleep(WAIT_AFTER_ACCEPT_STATE)
 
@@ -117,7 +117,7 @@ async def loop(driver, multiuser):
 
         created_datetime = int(datetime.datetime.utcfromtimestamp(datetime.datetime.strptime(created_datetime, "%Y-%m-%d %H:%M:%S%z").timestamp()).timestamp())
 
-        current_time = int(datetime.datetime.utcnow().timestamp())
+        current_time = int(datetime.datetime.now(datetime.UTC).timestamp())
 
         print(str(drive["b_id"]) + "\t" + drive["b_start_datetime"] + "\t" + str(current_time - created_datetime) + "\t" + str(current_time - (created_datetime + TAKE_AFTER_SECONDS)) + "\t" + str(str(user["referrer_u_id"]).lower() + "|" + str(multiuser["u_id"]).lower()))
         if current_time - (created_datetime + TAKE_AFTER_SECONDS) > 0 and str(user["referrer_u_id"]).lower() == str(multiuser["u_id"]).lower() and str(drive["b_state"]) == "1":
