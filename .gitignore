@@ -2,3 +2,4 @@ venv
 .idea
 start.sh
 test.py
+kickstarter.sh
