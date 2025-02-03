@@ -2,6 +2,8 @@ print("TEST POINT")
 import datetime
 import json
 
+import sys
+sys.path.insert(0, '/home/gregfeov/TaxiVirtualDriver/')
 from api_lib import *
 import asyncio
 import time
