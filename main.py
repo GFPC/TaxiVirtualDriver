@@ -72,7 +72,7 @@ def OrderLifeCycle(drive, driver):
         "token": GetAdminHashAndToken()[0],
         "u_hash": GetAdminHashAndToken()[1],
         "u_a_id": driver["id"],
-        "action":"set_arrival_state",
+        "action":"set_arrive_state",
     }
     data = make_request(url_prefix + "drive/get/"+str(order_id), data=data)
     print("API->Arrive:",order_id, 'status:', data)
