@@ -133,7 +133,7 @@ def CancelDrive(drive_id,reason:str):
     data = make_request(url_prefix + "drive/get/"+str(drive_id), data=data)
     return data
 
-def DrivesList():
+def NowDrivesList():
     token,u_hash = GetAdminHashAndToken()
     data = {
         "token": token,
