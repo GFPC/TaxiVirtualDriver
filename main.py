@@ -12,6 +12,7 @@ try:
     f.close()
 except:
     raise Exception("config.json not found")
+print("Reading config...")
 f = open("config.json", "r")
 config = json.loads(f.read())
 f.close()
