@@ -2,7 +2,7 @@ print("TEST POINT")
 import datetime
 import json
 
-from .api import *
+from api_lib import *
 import asyncio
 import time
 from threading import Thread
