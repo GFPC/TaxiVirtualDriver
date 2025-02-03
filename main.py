@@ -1,3 +1,4 @@
+print("TEST POINT")
 import datetime
 import json
 
