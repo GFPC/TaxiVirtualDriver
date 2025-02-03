@@ -1,7 +1,7 @@
 print("TEST POINT")
 import datetime
 import json
-
+"""
 from api import *
 import asyncio
 import time
@@ -201,3 +201,4 @@ async def main():
 
 print("Starting...")
 asyncio.run(main())
+"""
