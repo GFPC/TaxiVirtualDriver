@@ -197,6 +197,5 @@ async def main():
         await loop(driver,multiuser)
         await asyncio.sleep(LOOP_PERIOD_SECONDS)
 
-if __name__ == "__main__":
-    print("Starting...")
-    asyncio.run(main())
+print("Starting...")
+asyncio.run(main())
