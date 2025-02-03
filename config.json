@@ -3,7 +3,7 @@
   "TAKE_AFTER_SECONDS": 120,
   "DRIVER_EMAIL": "testdriver_0@ibronevik.ru",
   "WAIT_AFTER_ACCEPT_STATE": 7,
-  "WAIT_AFTER_ARRIVE_STATE": 7,
+  "WAIT_AFTER_ARRIVE_STATE": 30,
   "WAIT_AFTER_START_STATE": 7,
   "MULTIUSER_EMAIL": "testmultiuser_0@ibronevik.ru"
 }
