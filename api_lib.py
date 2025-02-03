@@ -134,17 +134,10 @@ def CancelDrive(drive_id,reason:str):
     return data
 
 def NowDrivesList():
-    token,u_hash = GetAdminHashAndToken()
-
-    data = {
-        "token": token,
-        "u_hash": u_hash,
+    return make_request(url_prefix + "drive/now", data={
+        "token": GetAdminHashAndToken()[0],
+        "u_hash": GetAdminHashAndToken()[1],
 
         "u_a_role":2,
-    }
-
-    data = make_request(url_prefix + "drive/now", data=data)
-
-    return data
-
+    })
 print("TEST POINT 3")
