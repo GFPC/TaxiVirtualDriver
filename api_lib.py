@@ -61,6 +61,20 @@ def GetAdminHashAndToken():
         U_HASH = r[1]
         return [TOKEN, U_HASH]
 
+
+def NowDrivesList():
+    token, u_hash = GetAdminHashAndToken()
+
+    data = {
+        "token": token,
+        "u_hash": u_hash,
+
+        "u_a_role": 2,
+    }
+
+    data = make_request(url_prefix + "drive/now", data=data)
+    return data
+
 # Возвращает token и u_hash пользователя, а также данные о пользователе
 def GetUserInfo(email:str):
     token_and_hash = GetAdminHashAndToken()
@@ -133,6 +147,4 @@ def CancelDrive(drive_id,reason:str):
     data = make_request(url_prefix + "drive/get/"+str(drive_id), data=data)
     return data
 
-def NowDrivesList():
-    return {"data":{"booking":{}}}
 print("TEST POINT 3")
