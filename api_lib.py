@@ -1,7 +1,9 @@
 import hashlib
+print("TEST POINT 1")
 from urllib.parse import urlencode,unquote
 import requests
 import json
+print("TEST POINT 2")
 
 ADMIN_CREDENTIALS_FILE = "gruzvill_admin.txt"
 
@@ -142,12 +144,4 @@ def DrivesList():
     data = make_request(url_prefix + "drive/now", data=data)
     return data
 
-def test():
-    r = make_request(url_prefix + "drive/get/2800",
-                     {"token": GetAdminHashAndToken()[0], "u_hash": GetAdminHashAndToken()[1]})
-    print(json.dumps(r, indent=4))
-    #exit(1)
-    drive = CreateDrive(650, 1, 1, 1, 1, "2025-01-31 23:29:00+07:00", 1, 1)
-    print(json.dumps(drive, indent=4))
-#test()
-#print(json.dumps(GetUserInfo("testdriver_0@ibronevik.ru"),indent=4))
+print("TEST POINT 3")
