@@ -57,7 +57,7 @@ def OrderLifeCycle(drive, driver):
                 exit(1)
     else:
         data = make_request(url_prefix + "drive/get/" + str(order_id), data=data)
-    print("API->Accept:",order_id, 'status:', data['status'])
+    print("API->Accept:",order_id, 'status:', data.get("status","error"))
 
 
     start_datetime = int(datetime.datetime.fromtimestamp(
