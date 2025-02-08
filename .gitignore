@@ -3,3 +3,4 @@ venv
 start.sh
 test.py
 kickstarter.sh
+node_modules
