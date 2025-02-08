@@ -60,9 +60,9 @@ def OrderLifeCycle(drive, driver):
     print("API->Accept:",order_id, 'status:', data.get("status","error"))
 
 
-    start_datetime = int(datetime.datetime.fromtimestamp(
-        datetime.datetime.strptime(drive["b_start_datetime"], "%Y-%m-%d %H:%M:%S%z").timestamp(), datetime.UTC).timestamp())
-    current_time = int(datetime.datetime.now(datetime.UTC).timestamp())
+    start_datetime = int(datetime.datetime.utcfromtimestamp(
+        datetime.datetime.strptime(drive["b_start_datetime"], "%Y-%m-%d %H:%M:%S%z").timestamp()).timestamp())
+    current_time = int(datetime.datetime.utcnow().timestamp())
 
     time.sleep(WAIT_AFTER_ACCEPT_STATE)
 
@@ -118,7 +118,7 @@ async def loop(driver, multiuser):
         user = user["data"]["user"][str(user_id)]
 
 
-        created_datetime = int(datetime.datetime.fromtimestamp(datetime.datetime.strptime(created_datetime, "%Y-%m-%d %H:%M:%S%z").timestamp(), datetime.UTC).timestamp())
+        created_datetime = int(datetime.datetime.utcfromtimestamp(datetime.datetime.strptime(created_datetime, "%Y-%m-%d %H:%M:%S%z").timestamp()).timestamp())
 
         current_time = int(datetime.datetime.now(datetime.UTC).timestamp())
 
