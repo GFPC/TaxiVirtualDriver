@@ -13,7 +13,7 @@ bot_admin_password = "p@ssw0rd"
 bot_admin_type = "e-mail"
 
 # make_request осуществляет запросы к апи с автоподстановкой заголовков
-def make_request(url, data={}, method="POST"):
+def make_request(url, data={}, method="POST",retry_num=0):
     req = None
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -23,7 +23,13 @@ def make_request(url, data={}, method="POST"):
         req = requests.post(url, data=urlencode(data), headers=headers)
     elif method == "GET":
         req = requests.get(url, data=urlencode(data), headers=headers)
-    data = json.loads(unquote(req.text))
+    try:
+        data = json.loads(unquote(req.text))
+    except:
+        if retry_num < 5:
+            make_request(url, data=data, method=method,retry_num=retry_num+1)
+        else:
+            print("CRITICAL ERROR, API response: ",req.text)
     if req.status_code != 200:
         print("REQUESTS ERROR: " + str(data["code"]))
     return data
