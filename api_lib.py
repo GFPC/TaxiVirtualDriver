@@ -1,9 +1,8 @@
 import hashlib
-print("TEST POINT 1")
+import time
 from urllib.parse import urlencode,unquote
 import requests
 import json
-print("TEST POINT 2")
 
 ADMIN_CREDENTIALS_FILE = "gruzvill_admin.txt"
 
@@ -19,20 +18,28 @@ def make_request(url, data={}, method="POST",retry_num=0):
         "Content-Type": "application/x-www-form-urlencoded",
         "Accept": "application/json"
     }
-    if method == "POST":
-        req = requests.post(url, data=urlencode(data), headers=headers)
-    elif method == "GET":
-        req = requests.get(url, data=urlencode(data), headers=headers)
-    try:
-        data = json.loads(unquote(req.text))
-    except:
-        if retry_num < 5:
-            make_request(url, data=data, method=method,retry_num=retry_num+1)
-        else:
-            print("CRITICAL ERROR, API response: ",req.text)
-    if req.status_code != 200:
-        print("REQUESTS ERROR: " + str(data["code"]))
-    return data
+    CONNECTION_RETRIES = 0 # max -100
+    while CONNECTION_RETRIES < 100:
+        try:
+            if method == "POST":
+                req = requests.post(url, data=urlencode(data), headers=headers)
+            elif method == "GET":
+                req = requests.get(url, data=urlencode(data), headers=headers)
+            try:
+                data = json.loads(unquote(req.text))
+            except:
+                if retry_num < 5:
+                    make_request(url, data=data, method=method, retry_num=retry_num + 1)
+                else:
+                    print("CRITICAL ERROR, API response: ", req.text)
+            if req.status_code != 200:
+                print("REQUESTS ERROR: " + str(data["code"]))
+            return data
+        except:
+            time.sleep(10)
+            CONNECTION_RETRIES += 1
+    raise Exception("CONNECTION ERROR AFTER " + str(CONNECTION_RETRIES) + " RETRIES")
+
 
 # GetAdminHashAndToken получает хэш админа и токен и хранит их в указанном файле(создается если его нет)
 # это сделано для сокращения времени запросов, требующих авторизации админа
