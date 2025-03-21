@@ -104,6 +104,7 @@ def OrderLifeCycle(drive, driver):
 async def loop(driver, multiuser):
     drives_list = NowDrivesList()
     print("ID\tStart\tSecsRemainingForStart\tExpr")
+    print(drives_list)
     for i in drives_list["data"]["booking"]:
         drive = drives_list["data"]["booking"][i]
 

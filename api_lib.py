@@ -87,6 +87,7 @@ def GetUserInfo(email:str):
         "u_a_email": email,
     }
     data = make_request(url_prefix + "token", data=data)
+    print(data)
     if data["status"] == "error":
         return data
     token = data["data"]["token"]
