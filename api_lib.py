@@ -10,9 +10,9 @@ load_dotenv()
 
 ADMIN_CREDENTIALS_FILE = "gruzvill_admin.txt"
 
-url_prefix = "https://ibronevik.ru/taxi/c/gruzvill/api/v1/"
-bot_admin_login = os.getenv("GRUZVILL_ADMIN_LOGIN")
-bot_admin_password = os.getenv("GRUZVILL_ADMIN_PASSWORD")
+url_prefix = os.getenv("URL")
+bot_admin_login = os.getenv("ADMIN_LOGIN")
+bot_admin_password = os.getenv("ADMIN_PASSWORD")
 bot_admin_type = "e-mail"
 
 # make_request осуществляет запросы к апи с автоподстановкой заголовков
