@@ -1,14 +1,18 @@
 import hashlib
+import os
 import time
 from urllib.parse import urlencode,unquote
 import requests
 import json
+from dotenv import load_dotenv
+
+load_dotenv()
 
 ADMIN_CREDENTIALS_FILE = "gruzvill_admin.txt"
 
 url_prefix = "https://ibronevik.ru/taxi/c/gruzvill/api/v1/"
-bot_admin_login = "admin@ibronevik.ru"
-bot_admin_password = "p@ssw0rd"
+bot_admin_login = os.getenv("GRUZVILL_ADMIN_LOGIN")
+bot_admin_password = os.getenv("GRUZVILL_ADMIN_PASSWORD")
 bot_admin_type = "e-mail"
 
 # make_request осуществляет запросы к апи с автоподстановкой заголовков
@@ -76,7 +80,7 @@ def GetAdminHashAndToken():
 def NowDrivesList():
     token,u_hash = GetAdminHashAndToken()
     data = {"token": token,"u_hash": u_hash,"u_a_role":2,}
-    data = make_request(url_prefix+"drive/now", data=data)
+    data = make_request(url_prefix+"drive/now?fields=00000000u1", data=data)
     return data
 # Возвращает token и u_hash пользователя, а также данные о пользователе
 def GetUserInfo(email:str):
@@ -150,6 +154,3 @@ def CancelDrive(drive_id,reason:str):
     }
     data = make_request(url_prefix + "drive/get/"+str(drive_id), data=data)
     return data
-
-
-print("TEST POINT 3")

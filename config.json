@@ -5,5 +5,6 @@
   "WAIT_AFTER_ACCEPT_STATE": 7,
   "WAIT_AFTER_ARRIVE_STATE": 30,
   "WAIT_AFTER_START_STATE": 7,
-  "MULTIUSER_EMAIL": "testmultiuser_0@ibronevik.ru"
+  "MULTIUSER_EMAIL": "testmultiuser_0@ibronevik.ru",
+  "THREADS_LIMIT": 10
 }
