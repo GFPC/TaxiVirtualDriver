@@ -30,6 +30,7 @@ WAIT_AFTER_START_STATE = config["WAIT_AFTER_START_STATE"]
 MULTIUSER_EMAIL = config["MULTIUSER_EMAIL"]
 THREADS_LIMIT = config["THREADS_LIMIT"]
 DRIVES_MODE = config.get("DRIVES_MODE", "basic")
+print(json.dumps(config, indent=4))
 
 
 def findCarForOrder(cars: dict, order_carClass: str | None):
