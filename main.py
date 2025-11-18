@@ -218,6 +218,7 @@ async def loop(driver, multiuser):
 
 
 async def main():
+    print('DRIVES_MODE: ' + DRIVES_MODE)
     multiuser = GetUserInfo(MULTIUSER_EMAIL)
     multiuser_auth = {
         "token": None,
