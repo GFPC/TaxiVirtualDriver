@@ -1,3 +1,5 @@
+import random
+
 print("TEST POINT")
 import datetime
 import json
@@ -27,26 +29,32 @@ WAIT_AFTER_ARRIVE_STATE = config["WAIT_AFTER_ARRIVE_STATE"]
 WAIT_AFTER_START_STATE = config["WAIT_AFTER_START_STATE"]
 MULTIUSER_EMAIL = config["MULTIUSER_EMAIL"]
 THREADS_LIMIT = config["THREADS_LIMIT"]
+DRIVES_MODE = config["DRIVES_MODE"]
 
-def findCarForOrder(cars:dict, order_carClass: str | None):
+
+def findCarForOrder(cars: dict, order_carClass: str | None):
     if isinstance(order_carClass, str):
         cars = [car for car in cars if car["cc_id"] == order_carClass]
     if len(cars) == 0:
         return None
     return cars[0]["c_id"]
 
+
 class DriveActions:
     class State:
         def __init__(self, name, time):
             self.name = name
             self.time = time
+
         def __repr__(self):
             return self.name
+
     ARRIVE = State("arrive", WAIT_AFTER_ARRIVE_STATE)
     START = State("start", WAIT_AFTER_START_STATE)
     COMPLETE = State("complete", 0)
 
-def set_drive_state(state: DriveActions.State,b_id, u_id):
+
+def set_drive_state(state: DriveActions.State, b_id, u_id):
     data = {
         "token": GetAdminHashAndToken()[0],
         "u_hash": GetAdminHashAndToken()[1],
@@ -63,32 +71,53 @@ def set_drive_state(state: DriveActions.State,b_id, u_id):
         print(state)
         raise Exception("Unknown state, ")
     data = make_request(url_prefix + "drive/get/" + str(b_id), data=data)
-    print("API->",state,":",b_id, 'status:', data.get("status","error"))
+    print("API->", state, ":", b_id, 'status:', data.get("status", "error"))
     if data["status"] == "error":
-        print(json.dumps(data,indent=4))
+        print(json.dumps(data, indent=4))
     time.sleep(state.time)
+
 
 def OrderLifeCycle(drive, driver):
     order_id = drive["b_id"]
 
-    car = findCarForOrder(driver["cars"], drive["b_car_class"] )
+    car = findCarForOrder(driver["cars"], drive["b_car_class"])
 
-    #1 accept
-    data = {
-        "token": GetAdminHashAndToken()[0],
-        "u_hash": GetAdminHashAndToken()[1],
-        "u_a_id": driver["id"],
-        "action":"set_performer",
-        "performer":1,
-        "data": json.dumps({
-            "c_id": car,
-            "c_payment_way": 1,
-            "c_options": {}
-        })
-    }
+    if DRIVES_MODE == "answer-response":
+        # 1 send response
+        data = {
+            "token": GetAdminHashAndToken()[0],
+            "u_hash": GetAdminHashAndToken()[1],
+            "u_a_id": driver["id"],
+            "action": "set_performer",
+            "performer": 0,
+            "data": json.dumps({
+                "c_id": car,
+                "c_payment_way": 1,
+                "c_options": {
+                    "text": ["TD: hi", "TD: hello, i can help you with this order", "TD: random text"][random.randint(0, 2)],
+                    "price": random.randint(100, 1000)
+                }
+            })
+        }
+    else:
+        # 1 accept
+        data = {
+            "token": GetAdminHashAndToken()[0],
+            "u_hash": GetAdminHashAndToken()[1],
+            "u_a_id": driver["id"],
+            "action": "set_performer",
+            "performer": 1,
+            "data": json.dumps({
+                "c_id": car,
+                "c_payment_way": 1,
+                "c_options": {}
+            })
+        }
 
-    if drive.get("b_voting")==1:
-        driver_code = make_request(url_prefix + "drive/get/" + str(order_id), data={"token": GetAdminHashAndToken()[0], "u_hash": GetAdminHashAndToken()[1]})["data"]["booking"][str(order_id)]["b_driver_code"]
+    if drive.get("b_voting") == 1:
+        driver_code = make_request(url_prefix + "drive/get/" + str(order_id),
+                                   data={"token": GetAdminHashAndToken()[0], "u_hash": GetAdminHashAndToken()[1]})[
+            "data"]["booking"][str(order_id)]["b_driver_code"]
         data["b_driver_code"] = driver_code
         res = make_request(url_prefix + "drive/get/" + str(order_id), data=data)
         if res["status"] == "error" and res.get("message", "") == "wrong driver code":
@@ -101,7 +130,8 @@ def OrderLifeCycle(drive, driver):
             exit(1)
     else:
         data = make_request(url_prefix + "drive/get/" + str(order_id), data=data)
-    print("API->Accept:",order_id, 'status:', data.get("status","error"), data)
+    print("API->Accept:", order_id, 'status:', data.get("status", "error"), data)
+
 
     start_datetime = int(datetime.datetime.utcfromtimestamp(
         datetime.datetime.strptime(drive["b_start_datetime"], "%Y-%m-%d %H:%M:%S%z").timestamp()).timestamp())
@@ -110,16 +140,38 @@ def OrderLifeCycle(drive, driver):
     time.sleep(WAIT_AFTER_ACCEPT_STATE)
 
     if start_datetime > current_time:
-        print("HYBERNATE->Order:",order_id, "for", start_datetime - current_time, "seconds")
+        print("HYBERNATE->Order:", order_id, "for", start_datetime - current_time, "seconds")
         time.sleep(start_datetime - current_time)
+
+    if DRIVES_MODE == "answer-response":
+        while True:
+            drive = make_request(
+                f"{url_prefix}drive/get/{order_id}",
+                data={"token": GetAdminHashAndToken()[0], "u_hash": GetAdminHashAndToken()[1]}
+            )["data"]["booking"][str(order_id)]
+
+            suitable_card = next(d for d in drive["drivers"] if d["u_id"] == driver["id"])
+
+            # Если водитель назначен - выходим
+            if suitable_card["c_appointed"] is not None:
+                break
+
+            # Если время вышло - завершаем с ошибкой
+            start_time = datetime.datetime.utcfromtimestamp(drive["b_start_datetime"])
+            if datetime.datetime.utcnow().timestamp() > start_time.timestamp() + 3600:
+                exit(1)
+
+            # Ждем перед следующей проверкой
+            time.sleep(20)
 
     # 2 arrive
     if drive.get("b_voting") != 1:
         set_drive_state(DriveActions.ARRIVE, order_id, driver["id"])
-    #3 start
+    # 3 start
     set_drive_state(DriveActions.START, order_id, driver["id"])
-    #4 end
+    # 4 end
     set_drive_state(DriveActions.COMPLETE, order_id, driver["id"])
+
 
 async def loop(driver, multiuser):
     drives_list = NowDrivesList()
@@ -131,22 +183,29 @@ async def loop(driver, multiuser):
         max_waiting = drive["b_max_waiting"]
         user_id = drive["u_id"]
 
-        user = make_request(url_prefix + "user/" + str(user_id),{"token": GetAdminHashAndToken()[0], "u_hash": GetAdminHashAndToken()[1]})
+        user = make_request(url_prefix + "user/" + str(user_id),
+                            {"token": GetAdminHashAndToken()[0], "u_hash": GetAdminHashAndToken()[1]})
         if user["status"] == "error":
             print("User id: " + str(user_id) + " not found")
             continue
         user = user["data"]["user"][str(user_id)]
 
-
-        created_datetime = int(datetime.datetime.utcfromtimestamp(datetime.datetime.strptime(created_datetime, "%Y-%m-%d %H:%M:%S%z").timestamp()).timestamp())
+        created_datetime = int(datetime.datetime.utcfromtimestamp(
+            datetime.datetime.strptime(created_datetime, "%Y-%m-%d %H:%M:%S%z").timestamp()).timestamp())
 
         current_time = int(datetime.datetime.utcnow().timestamp())
 
-        print(str(drive["b_id"]) + "\t" + str(drive["b_start_datetime"]) + "\t" + str(current_time - created_datetime) + "\t" + str(current_time - (created_datetime + TAKE_AFTER_SECONDS)) + "\t" + str(str(user["referrer_u_id"]).lower() + "|" + str(multiuser["u_id"]).lower()))
+        print(str(drive["b_id"]) + "\t" + str(drive["b_start_datetime"]) + "\t" + str(
+            current_time - created_datetime) + "\t" + str(
+            current_time - (created_datetime + TAKE_AFTER_SECONDS)) + "\t" + str(
+            str(user["referrer_u_id"]).lower() + "|" + str(multiuser["u_id"]).lower()))
         threads_limit = THREADS_LIMIT if THREADS_LIMIT else 10
         threads_count = 0
-        if current_time - (created_datetime + TAKE_AFTER_SECONDS) > 0 and str(user["referrer_u_id"]).lower() == str(multiuser["u_id"]).lower() and str(drive["b_state"]) == "1":
-            print("Founded suitable drive| id: " + str(drive["b_id"]), "|User id: " + str(user_id), "|Start datetime: " + str(created_datetime), "|Max waiting: " + str(max_waiting) + "|IsVoting: " + str(drive.get("b_voting",False)))
+        if current_time - (created_datetime + TAKE_AFTER_SECONDS) > 0 and str(user["referrer_u_id"]).lower() == str(
+                multiuser["u_id"]).lower() and str(drive["b_state"]) == "1":
+            print("Founded suitable drive| id: " + str(drive["b_id"]), "|User id: " + str(user_id),
+                  "|Start datetime: " + str(created_datetime),
+                  "|Max waiting: " + str(max_waiting) + "|IsVoting: " + str(drive.get("b_voting", False)))
             if threads_count < threads_limit:
                 t = Thread(target=OrderLifeCycle, args=(drive, driver), daemon=True)
                 t.start()
@@ -157,8 +216,8 @@ async def loop(driver, multiuser):
                     time.sleep(1)
     print("Done!------------------------------------")
 
-async def main():
 
+async def main():
     multiuser = GetUserInfo(MULTIUSER_EMAIL)
     multiuser_auth = {
         "token": None,
@@ -181,7 +240,7 @@ async def main():
         multiuser = multiuser["data"]["user"][list(multiuser["data"]["user"].keys())[0]]
     print("Multiuser id: " + str(multiuser["u_id"]))
     print("Multiuser RefCode: " + multiuser["ref_code"])
-    
+
     driver = GetUserInfo(DRIVER_EMAIL)
     if driver["status"] == "error":
         print("Driver not found, registering...")
@@ -200,10 +259,11 @@ async def main():
         driver = driver["data"]["user"][list(driver["data"]["user"].keys())[0]]
     print("Driver id: " + str(driver["u_id"]))
 
-    cars = make_request(url_prefix+"/user/"+str(driver["u_id"])+"/car",{"token": GetAdminHashAndToken()[0],"u_hash": GetAdminHashAndToken()[1]})["data"]["car"]
+    cars = make_request(url_prefix + "/user/" + str(driver["u_id"]) + "/car",
+                        {"token": GetAdminHashAndToken()[0], "u_hash": GetAdminHashAndToken()[1]})["data"]["car"]
     car_id = -1
     if len(cars) == 0:
-        car = make_request(url_prefix+"/car",{
+        car = make_request(url_prefix + "/car", {
             "token": driver_auth["token"],
             "u_hash": driver_auth["u_hash"],
 
@@ -217,7 +277,7 @@ async def main():
         print("Car created with id: " + str(car["data"]["car"]["c_id"]))
     else:
         cars = list(cars.values())
-        cars = [{"c_id": car["c_id"], "cc_id": car["cc_id"]} for car in cars ]
+        cars = [{"c_id": car["c_id"], "cc_id": car["cc_id"]} for car in cars]
     driver = {
         "id": driver["u_id"],
         "cars": cars,
@@ -225,7 +285,8 @@ async def main():
     }
 
     while True:
-        await loop(driver,multiuser)
+        await loop(driver, multiuser)
         await asyncio.sleep(LOOP_PERIOD_SECONDS)
+
 
 asyncio.run(main())
